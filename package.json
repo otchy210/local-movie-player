@@ -5,9 +5,15 @@
   "main": "dist/js/main.js",
   "scripts": {
     "copy": "cp src/index.html dist/index.html",
-    "build": "npm run copy && webpack --mode development",
-    "watch": "npm run copy && webpack --watch",
-    "start": "webpack-dev-server --content-base dist --mode development --inline"
+    "build": "npm run copy && webpack --mode production",
+    "watch": "npm run copy && webpack --mode production --watch",
+    "watch:bg": "npm run watch &",
+    "ui": "webpack-dev-server --content-base dist --mode production --inline",
+    "ui:bg": "npm run ui &",
+    "api": "node src/js/api.js",
+    "api:bg": "npm run api &",
+    "killall": "killall node",
+    "start": "npm run watch:bg && npm run ui:bg && npm run api:bg"
   },
   "repository": {
     "type": "git",
@@ -29,6 +35,7 @@
     "webpack-dev-server": "^3.11.0"
   },
   "dependencies": {
+    "express": "^4.17.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   }
