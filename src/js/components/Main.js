@@ -19,15 +19,13 @@ const Main = () => {
             const data = JSON.parse(e.data);
             switch (data.status) {
                 case 'loading':
-                    setMessage(data.message);
+                    setMessage(`Loading: ${data.message}`);
                     break;
                 case 'finished':
-                    setMessage('');
-                    console.log(`db: ${data.db}`);
+                    setMessage(JSON.stringify(data.db));
                     ws.close();
                     break;
                 case 'error':
-                    setMessage('');
                     setError(data.message);
                     ws.close();
                     break;
@@ -39,8 +37,8 @@ const Main = () => {
     }, []);
 
     return <main>
-        {error && `Error: ${error}`}
-        {message && `Message: ${message}`}
+        {message && <div>{message}</div>}
+        {error && <div>[Error]{error}</div>}
     </main>
 };
 

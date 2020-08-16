@@ -1,18 +1,82 @@
-const init = (ws, req) => {
-    ws.on('message', function(msg) {
-        let count = 1;
-        const check = () => {
-            if (count >= 5) {
-                ws.send(JSON.stringify({status: 'finished', db: {data: 'data'}}));
-                return;
+const fs = require('fs');
+
+const MOVIES_EXT = ['.mp4'];
+const DEFAULT_DAT = {size:0, tags: []};
+
+const isMovie = (file) => {
+    for (const ext of MOVIES_EXT) {
+        if (file.endsWith(ext)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+const loadDat = (path) => {
+    const datPath = `${path}.dat`;
+    try {
+        const stat = fs.statSync(datPath);
+        if (!stat.isFile()) {
+            return DEFAULT_DAT;
+        }
+        const dat = JSON.parse(fs.readFileSync(datPath));
+        return dat;
+    } catch (err) {
+        return DEFAULT_DAT;
+    }
+}
+
+const saveDat = (path, dat) => {
+    const datPath = `${path}.dat`;
+    fs.writeFileSync(datPath, JSON.stringify(dat));
+}
+
+const loadDir = (isRoot, dir, results, onMessage, onFinished, onError) => {
+    try {
+        onMessage(`[Dir] ${dir}`);
+        const files = fs.readdirSync(dir);
+        for (const file of files) {
+            onMessage(`[File] ${file}`);
+            const path = `${dir}/${file}`;
+            const stat = fs.statSync(path);
+            if (isMovie(file)) {
+                const dat = loadDat(path);
+                if (dat.size !== stat.size) {
+                    dat.size = stat.size;
+                    saveDat(path, dat);
+                }
+                const meta = {...DEFAULT_DAT, ...dat, ...{path, name: file}};
+                results.push(meta);
+            } else if (stat.isDirectory()) {
+                loadDir(false, path, results, onMessage, onFinished, onError);
             }
-            ws.send(JSON.stringify({status: 'loading', message: `count: ${count++}`}));
-            setTimeout(check, 1000);
         };
-        check();
+        if (isRoot) {
+            onFinished();
+        }
+    } catch (err) {
+        onError(JSON.stringify({err, results}));
+    }
+};
+
+const init = (ws, req) => {
+    ws.on('message', (msg) => {
+        const movieDir = req.query.movieDir;
+        const results = [];
+        const onMessage = (message) => {
+            ws.send(JSON.stringify({status: 'loading', message}));
+        };
+        const onFinished = () => {
+            ws.send(JSON.stringify({status: 'finished', db: results}));
+        };
+        const onError = (message) => {
+            ws.send(JSON.stringify({status: 'error', message}));
+        };
+        loadDir(true, movieDir, results, onMessage, onFinished, onError);
     });
 };
 
 module.exports = {
-    init
+    init,
+    loadDir
 };
