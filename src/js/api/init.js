@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const MOVIES_EXT = ['.mp4'];
+const MOVIES_EXT = ['.mp4', '.mov', '.m4v'];
 const DEFAULT_DAT = {size:0, tags: []};
 
 const isMovie = (file) => {
