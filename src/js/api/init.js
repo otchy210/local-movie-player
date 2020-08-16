@@ -47,14 +47,13 @@ const loadDir = (movieDir, dir, results, onMessage, onFinished, onError) => {
                     dat.size = stat.size;
                     saveDat(path, dat);
                 }
-                console.log('LOG', movieDir, movieDir.length);
                 const urlPath = path
                     .substr(movieDir.length)
                     .split('/')
                     .filter(name => name.length !== 0)
                     .map(encodeURIComponent)
                     .join('/');
-                const meta = {...DEFAULT_DAT, ...dat, ...{path: urlPath, name: file}};
+                const meta = {...DEFAULT_DAT, ...dat, ...{path: urlPath, name: file.normalize()}};
                 results.push(meta);
             } else if (stat.isDirectory()) {
                 loadDir(movieDir, path, results, onMessage, onFinished, onError);
@@ -80,7 +79,13 @@ const init = (ws, req) => {
             rsApp.use(express.static(movieDir));
             rsApp.listen(RESOURCE_PORT, () => {
                 console.log(`Resource server running on http://localhost:${RESOURCE_PORT}`);
-            })
+            }).on('error', (err) => {
+                if (err.code === 'EADDRINUSE') {
+                    console.log('An expected error happened. Ignoring.');
+                    return;
+                }
+                console.error(err);
+            });
             ws.send(JSON.stringify({status: 'finished', db: {list: results}}));
         };
         const onError = (message) => {

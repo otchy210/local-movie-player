@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import List from './List';
+import Search from './Search';
 
 const INIT_URL = 'ws://localhost:3000/init';
 
@@ -42,7 +42,7 @@ const Main = () => {
     return <main>
         {error && <div>[Error]{error}</div>}
         {message && <div>{message}</div>}
-        {db && <List db={db} />}
+        {db && <Search db={db} />}
     </main>
 };
 
