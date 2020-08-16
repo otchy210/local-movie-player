@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { execSync } = require('child_process');
 const express = require('express');
 const { RESOURCE_PORT } = require('../const');
 
@@ -38,13 +39,37 @@ const loadDir = (movieDir, dir, results, onMessage, onFinished, onError) => {
         onMessage(`[Dir] ${dir}`);
         const files = fs.readdirSync(dir);
         for (const file of files) {
-            onMessage(`[File] ${file}`);
             const path = `${dir}/${file}`;
             const stat = fs.statSync(path);
             if (isMovie(file)) {
+                onMessage(`[File] ${file}`);
                 const dat = loadDat(path);
+                let needToSave = false;
                 if (dat.size !== stat.size) {
                     dat.size = stat.size;
+                    needToSave = true;
+                }
+                if (!dat.length) {
+                    const command = `ffmpeg -i "${path}" 2>&1 | grep "  Duration: "`;
+                    const stdout = execSync(command).toString();
+                    const duration = stdout.trim().split(' ')[1].split(',')[0];
+                    dat.duration = duration;
+
+                    const [hours, mins, secs] = duration.split(':');
+                    const length = parseInt(hours) * 3600 + parseInt(mins) * 60 + parseFloat(secs);
+                    dat.length = length;
+
+                    needToSave = true;
+                }
+                if (!dat.thumbnail) {
+                    const imgPath = `${path}.jpg`;
+                    const command = `ffmpeg -i "${path}" -ss 2 -vframes 1 -vf scale=600:-1 -f image2 -q:v 10 -y "${imgPath}"`;
+                    execSync(command);
+                    const base64 = fs.readFileSync(imgPath, {encoding: 'base64'});
+                    dat.thumbnail = `data:image/jpg;base64,${base64}`;
+                    needToSave = true;
+                }
+                if (needToSave) {
                     saveDat(path, dat);
                 }
                 const urlPath = path
@@ -60,11 +85,25 @@ const loadDir = (movieDir, dir, results, onMessage, onFinished, onError) => {
             }
         };
         if (movieDir === dir) {
+            cleanTmpFiles(movieDir, results);
             onFinished();
         }
     } catch (err) {
         onError(JSON.stringify({err, results}));
     }
+};
+
+const cleanTmpFiles = (movieDir, results) => {
+    results.forEach(meta => {
+        const path = `${movieDir}/${decodeURIComponent(meta.path)}`;
+        const imgPath = `${path}.jpg`;
+        try {
+            const stat = fs.statSync(imgPath);
+            if (stat.isFile()) {
+                fs.unlinkSync(imgPath);
+            }
+        } catch (e) {}
+    })
 };
 
 const init = (ws, req) => {
