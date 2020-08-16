@@ -1,4 +1,6 @@
 const { loadDir } = require('./api/init');
 
+const movieDir = '/Users/otchy/Desktop/tmp';
 const results = [];
-loadDir(true, '/Volumes/home/tmp/premium-videos', results, console.log, console.log, console.error);
+loadDir(movieDir, movieDir, results, console.log, console.log, console.error);
+console.log(results);

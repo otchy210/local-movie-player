@@ -1,4 +1,6 @@
 const fs = require('fs');
+const express = require('express');
+const { RESOURCE_PORT } = require('../const');
 
 const MOVIES_EXT = ['.mp4', '.mov', '.m4v'];
 const DEFAULT_DAT = {size:0, tags: []};
@@ -31,7 +33,7 @@ const saveDat = (path, dat) => {
     fs.writeFileSync(datPath, JSON.stringify(dat));
 }
 
-const loadDir = (isRoot, dir, results, onMessage, onFinished, onError) => {
+const loadDir = (movieDir, dir, results, onMessage, onFinished, onError) => {
     try {
         onMessage(`[Dir] ${dir}`);
         const files = fs.readdirSync(dir);
@@ -45,13 +47,20 @@ const loadDir = (isRoot, dir, results, onMessage, onFinished, onError) => {
                     dat.size = stat.size;
                     saveDat(path, dat);
                 }
-                const meta = {...DEFAULT_DAT, ...dat, ...{path, name: file}};
+                console.log('LOG', movieDir, movieDir.length);
+                const urlPath = path
+                    .substr(movieDir.length)
+                    .split('/')
+                    .filter(name => name.length !== 0)
+                    .map(encodeURIComponent)
+                    .join('/');
+                const meta = {...DEFAULT_DAT, ...dat, ...{path: urlPath, name: file}};
                 results.push(meta);
             } else if (stat.isDirectory()) {
-                loadDir(false, path, results, onMessage, onFinished, onError);
+                loadDir(movieDir, path, results, onMessage, onFinished, onError);
             }
         };
-        if (isRoot) {
+        if (movieDir === dir) {
             onFinished();
         }
     } catch (err) {
@@ -67,16 +76,22 @@ const init = (ws, req) => {
             ws.send(JSON.stringify({status: 'loading', message}));
         };
         const onFinished = () => {
-            ws.send(JSON.stringify({status: 'finished', db: results}));
+            const rsApp = express();
+            rsApp.use(express.static(movieDir));
+            rsApp.listen(RESOURCE_PORT, () => {
+                console.log(`Resource server running on http://localhost:${RESOURCE_PORT}`);
+            })
+            ws.send(JSON.stringify({status: 'finished', db: {list: results}}));
         };
         const onError = (message) => {
             ws.send(JSON.stringify({status: 'error', message}));
         };
-        loadDir(true, movieDir, results, onMessage, onFinished, onError);
+        loadDir(movieDir, movieDir, results, onMessage, onFinished, onError);
     });
 };
 
 module.exports = {
     init,
-    loadDir
+    loadDir,
+    RESOURCE_PORT
 };

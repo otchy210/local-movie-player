@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import List from './List';
 
 const INIT_URL = 'ws://localhost:3000/init';
 
 const Main = () => {
     const [message, setMessage] = useState('Loading...');
     const [error, setError] = useState();
+    const [db, setDb] = useState();
 
     useEffect(() => {
         const url = new URL(location.href);
@@ -22,7 +24,8 @@ const Main = () => {
                     setMessage(`Loading: ${data.message}`);
                     break;
                 case 'finished':
-                    setMessage(JSON.stringify(data.db));
+                    setMessage(undefined);
+                    setDb(data.db);
                     ws.close();
                     break;
                 case 'error':
@@ -37,8 +40,9 @@ const Main = () => {
     }, []);
 
     return <main>
-        {message && <div>{message}</div>}
         {error && <div>[Error]{error}</div>}
+        {message && <div>{message}</div>}
+        {db && <List db={db} />}
     </main>
 };
 
