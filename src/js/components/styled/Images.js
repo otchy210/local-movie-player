@@ -4,7 +4,7 @@ const Img = styled.img`
 `;
 
 const Thumbnail = styled(Img)`
-    width: 400px;
+    width: 100%;
 `;
 
 export {

@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
+import styled from 'styled-components';
 import List from './List';
 import { TextInput } from './styled/Forms';
+import { unit1 } from './styled/common';
+
+const QueryContainer = styled.div`
+    margin-bottom: ${unit1};
+`;
 
 const Search = (props) => {
     const { db } = props;
@@ -30,9 +36,9 @@ const Search = (props) => {
     }, []);
 
     return <div>
-        <div>
+        <QueryContainer>
             <TextInput ref={queryInput} />
-        </div>
+        </QueryContainer>
         <List list={list} />
     </div>
 };
