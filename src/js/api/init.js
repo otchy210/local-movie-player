@@ -61,6 +61,16 @@ const loadDir = (movieDir, dir, results, onMessage, onFinished, onError) => {
 
                     needToSave = true;
                 }
+                if (!dat.width || !dat.height) {
+                    const command = `ffmpeg -i "${path}" 2>&1 | grep ": Video: "`;
+                    const stdout = execSync(command).toString();
+                    const match = /, ([\d]{2,4})x([\d]{2,4})/.exec(stdout);
+                    const width = parseInt(match[1]);
+                    const height = parseInt(match[2]);
+                    dat.width = width;
+                    dat.height = height;
+                    needToSave = true;
+                }
                 if (!dat.thumbnail) {
                     const imgPath = `${path}.jpg`;
                     const command = `ffmpeg -i "${path}" -ss 2 -vframes 1 -vf scale=600:-1 -f image2 -q:v 10 -y "${imgPath}"`;

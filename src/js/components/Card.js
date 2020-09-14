@@ -44,6 +44,7 @@ const Card = (props) => {
         </ThumbnailContainer>
         <MetaDataContainer>
             <MetaData>{formatDuration(meta.duration)}</MetaData>
+            <MetaData>{meta.width}x{meta.height}</MetaData>
             <MetaData>{ext}</MetaData>
             <MetaData>{formatSize(meta.size)}</MetaData>
         </MetaDataContainer>
