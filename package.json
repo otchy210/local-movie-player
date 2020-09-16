@@ -13,7 +13,8 @@
     "api": "node src/js/api.js",
     "api:bg": "npm run api &",
     "killall": "killall node",
-    "start": "npm run watch:bg && npm run ui:bg && npm run api:bg"
+    "start": "npm run watch:bg && npm run ui:bg && npm run api:bg",
+    "server": "node src/js/server.mjs"
   },
   "repository": {
     "type": "git",
