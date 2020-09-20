@@ -15,19 +15,20 @@ const init = async () => {
     await handleDir('/').catch(e => {
         console.warn(e);
     });
+    resetLine();
 };
 
 const buildContext = () => {
     const result = {
-        HTTP_PORT: process.env.HTTP_PORT ?? 8080,
-        LOCAL_TMP: process.env.LOCAL_TMP ?? '/tmp',
+        LMP_PORT: process.env.LMP_PORT ?? 8080,
+        LMP_TMP: process.env.LMP_TMP ?? '/tmp',
     }
-    if (!process.env.MOVIE_DIR) {
-        throwError("Not found MOVIE_DIR environment variable");
+    if (!process.env.LMP_ROOT) {
+        throwError("Not found LMP_ROOT environment variable");
     }
-    result.MOVIE_DIR = process.env.MOVIE_DIR;
+    result.LMP_ROOT = process.env.LMP_ROOT;
     try {
-        result.FFMPEG = execSync('which ffmpeg').toString().trim();
+        result.LMP_FFMPEG = execSync('which ffmpeg').toString().trim();
     } catch (e) {
         throwError("Not found `ffmpeg` command");
     }
@@ -35,18 +36,18 @@ const buildContext = () => {
 };
 
 const validateContext = () => {
-    if (!fs.existsSync(context.MOVIE_DIR)) {
-        throwError(`"${context.MOVIE_DIR}" doesn't exist`);
+    if (!fs.existsSync(context.LMP_ROOT)) {
+        throwError(`"${context.LMP_ROOT}" doesn't exist`);
     }
-    const stat = fs.statSync(context.MOVIE_DIR);
+    const stat = fs.statSync(context.LMP_ROOT);
     if (!stat.isDirectory()) {
-        throwError(`"${context.MOVIE_DIR}" isn't directory`);
+        throwError(`"${context.LMP_ROOT}" isn't directory`);
     }
 };
 
 const handleDir = async (relativePath) => {
-    console.log(relativePath);
-    const absoluteDirPath = `${context.MOVIE_DIR}${relativePath}`;
+    showOneline(relativePath);
+    const absoluteDirPath = `${context.LMP_ROOT}${relativePath}`;
     const files = fs.readdirSync(absoluteDirPath);
     for (const file of files) {
         const relativeFilePath = `${relativePath}${file}`;
@@ -72,7 +73,7 @@ const hasMovieExt = (file) => {
 };
 
 const isDir = (relativePath) => {
-    const absolutePath = `${context.MOVIE_DIR}${relativePath}`;
+    const absolutePath = `${context.LMP_ROOT}${relativePath}`;
     if (!fs.existsSync(absolutePath)) {
         return false;
     }
@@ -81,13 +82,13 @@ const isDir = (relativePath) => {
 };
 
 const handleMovie = async (relativePath) => {
-    console.log(relativePath);
-    const absolutePath = `${context.MOVIE_DIR}${relativePath}`;
+    showOneline(relativePath);
+    const absolutePath = `${context.LMP_ROOT}${relativePath}`;
     const datPath = `${absolutePath}.json`;
     const dat = loadDat(datPath);
     let needToSave = false;
     needToSave |= handleMeta(dat, absolutePath);
-    needToSave |= await handleThumbnails(dat, absolutePath).catch(e => {
+    needToSave |= await handleThumbnails(dat, absolutePath, relativePath).catch(e => {
         console.warn(e);
     });
     if (needToSave) {
@@ -115,7 +116,7 @@ const handleMeta = (dat, path) => {
     if (meta.duration && meta.length && meta.width && meta.height) {
         return false;
     }
-    const command = `${context.FFMPEG} -i "${path}" 2>&1 | cat`;
+    const command = `${context.LMP_FFMPEG} -i "${path}" 2>&1 | cat`;
     const results = execSync(command).toString();
     results.split('\n').forEach(line => {
         if (line.includes('  Duration: ')) {
@@ -157,23 +158,24 @@ const handleVideo = (line) => {
     return [width, height];
 };
 
-const handleThumbnails = async (dat, path) => {
+const handleThumbnails = async (dat, absolutePath, relativePath) => {
     const thumbnails = dat.thumbnails ?? [];
     if (thumbnails.length > 0) {
         return false;
     }
-    const tmpDirPath = `${context.LOCAL_TMP}/${md5hex(path)}`;
+    const tmpDirPath = `${context.LMP_TMP}/${md5hex(absolutePath)}`;
     if (fs.existsSync(tmpDirPath)) {
         fs.rmdirSync(tmpDirPath, { recursive: true });
     }
     fs.mkdirSync(tmpDirPath);
-    const lastFrame = parseInt(dat.meta.length)
+    const lastFrame = parseInt(dat.meta.length);
+    const lastFrameLength = lastFrame.toString().length;
     const iid = setInterval(() => {
         fs.readdir(tmpDirPath, (err, files) => {
-            console.log(`${files.length} / ${lastFrame}`);
+            showOneline(`${relativePath} [${files.length.toString().padStart(lastFrameLength, ' ')}/${lastFrame}]`);
         });
-    }, 1000);
-    const command = `${context.FFMPEG} -skip_frame nokey -i "${path}" -vf scale=240:-1,fps=1 -q:v 10 "${tmpDirPath}/%05d.jpg"`
+    }, 200);
+    const command = `${context.LMP_FFMPEG} -skip_frame nokey -i "${absolutePath}" -vf scale=240:-1,fps=1 -q:v 10 "${tmpDirPath}/%05d.jpg"`
     await exec(command).catch(e => {
         console.warn(e);
     });
@@ -210,6 +212,16 @@ const showMessage = (message) => {
     console.log('==== Local Movie Player ===================================================');
     console.log(message);
     console.log('===========================================================================');
+};
+
+const resetLine = () => {
+    process.stdout.clearLine();
+    process.stdout.cursorTo(0);
+}
+
+const showOneline = (message) => {
+    resetLine();
+    process.stdout.write(message);
 };
 
 export {
