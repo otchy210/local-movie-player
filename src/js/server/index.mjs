@@ -93,6 +93,7 @@ const handleMovie = async (relativePath) => {
     const datPath = `${absolutePath}.json`;
     const dat = loadDat(datPath);
     let needToSave = false;
+    needToSave |= handleStat(dat, absolutePath);
     needToSave |= handleMeta(dat, absolutePath);
     needToSave |= await handleThumbnails(dat, absolutePath, relativePath).catch(e => {
         console.warn(e);
@@ -100,13 +101,19 @@ const handleMovie = async (relativePath) => {
     if (needToSave) {
         saveDat(datPath, dat);
     }
-    const legacyDatPath = `${absolutePath}.dat`;
-    if (fs.existsSync(legacyDatPath)) {
-        fs.unlinkSync(legacyDatPath);
-    }
+    // const legacyDatPath = `${absolutePath}.dat`;
+    // if (fs.existsSync(legacyDatPath)) {
+    //     fs.unlinkSync(legacyDatPath);
+    // }
+    const lastDotIndex = relativePath.lastIndexOf('.');
+    const ext = relativePath.substring(lastDotIndex + 1);
+    const lastSlashIndex = relativePath.lastIndexOf('/');
+    const name = relativePath.substring(lastSlashIndex + 1, lastDotIndex);
     return {
         ...dat,
-        path: relativePath
+        path: relativePath,
+        ext,
+        name,
     };
 }
 
@@ -119,6 +126,30 @@ const loadDat = (path) => {
         return {};
     }
     return JSON.parse(fs.readFileSync(path));
+};
+
+const handleStat = (dat, path) => {
+    const stat = dat.stat ?? {};
+    if (stat.size && stat.displaySize) {
+        return false;
+    }
+    const fileStat = fs.statSync(path);
+    stat.size = fileStat.size;
+    stat.displaySize = formatSize(stat.size);
+    dat.stat = stat;
+    return true;
+};
+
+const formatSize = (size) => {
+    if (size >= 900*1000*1000) { // >= 0.9GB
+        return `${(size / (1000*1000*1000)).toFixed(2)} GB`;
+    } else if (size >= 900*1000) { // >= 0.9MB
+        return `${(size / (900*1000)).toFixed(2)} MB`;
+    } else if (size >= 900) { // >= 0.9KB
+        return `${(size / 1000).toFixed(2)} KB`;
+    } else {
+        return size.toString();
+    }
 };
 
 const handleMeta = (dat, path) => {

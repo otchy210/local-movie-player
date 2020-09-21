@@ -10,7 +10,7 @@ const QueryContainer = styled.div`
 
 const Search = (props) => {
     const { db } = props;
-    const [list, setList] = useState(db.list);
+    const [list, setList] = useState(db.list());
     const queryInput = useRef();
 
     useEffect(() => {
@@ -22,12 +22,11 @@ const Search = (props) => {
             }
             lastQuery = query;
             if (query.length === 0) {
-                setList(db.list);
+                setList(db.list());
                 return;
             }
-            const filteredList = db.list.filter(meta => {
-                return meta.name.includes(query);
-            });
+            const filteredList = db.list(query);
+            console.log(filteredList);
             setList(filteredList);
         }, 500);
         return () => {

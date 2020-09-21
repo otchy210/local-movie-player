@@ -23,7 +23,7 @@ const ListContainer = styled.div`
 const List = (props) => {
     const { list } = props;
     return <ListContainer>
-        {list.map(meta => <Card meta={meta} />)}
+        {list.map(movie => <Card movie={movie} />)}
     </ListContainer>
 };
 
