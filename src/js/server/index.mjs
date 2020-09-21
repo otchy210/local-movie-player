@@ -1,5 +1,6 @@
 import { execSync, exec as exec_} from 'child_process';
 import fs from 'fs';
+import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
 
@@ -12,10 +13,12 @@ const init = async () => {
     context = buildContext();
     validateContext();
     showMessage(context);
-    await handleDir('/').catch(e => {
+    const db = [];
+    await handleDir('/', db).catch(e => {
         console.warn(e);
     });
     resetLine();
+    buildIndexPage(db);
 };
 
 const buildContext = () => {
@@ -45,18 +48,19 @@ const validateContext = () => {
     }
 };
 
-const handleDir = async (relativePath) => {
+const handleDir = async (relativePath, db) => {
     showOneline(relativePath);
     const absoluteDirPath = `${context.LMP_ROOT}${relativePath}`;
     const files = fs.readdirSync(absoluteDirPath);
     for (const file of files) {
         const relativeFilePath = `${relativePath}${file}`;
         if (hasMovieExt(file)) {
-            await handleMovie(relativeFilePath).catch(e => {
+            const movie = await handleMovie(relativeFilePath).catch(e => {
                 console.warn(e);
             });
+            db.push(movie);
         } else if (isDir(relativeFilePath)) {
-            await handleDir(`${relativeFilePath}/`).catch(e => {
+            await handleDir(`${relativeFilePath}/`, db).catch(e => {
                 console.warn(e);
             });
         }
@@ -98,6 +102,10 @@ const handleMovie = async (relativePath) => {
     if (fs.existsSync(legacyDatPath)) {
         fs.unlinkSync(legacyDatPath);
     }
+    return {
+        ...dat,
+        path: relativePath
+    };
 }
 
 const loadDat = (path) => {
@@ -120,11 +128,11 @@ const handleMeta = (dat, path) => {
     const results = execSync(command).toString();
     results.split('\n').forEach(line => {
         if (line.includes('  Duration: ')) {
-            const [duration, length] = handleDuration(line);
+            const [duration, length] = handleMetaDuration(line);
             meta.duration = duration;
             meta.length = length;
         } else if (line.includes(': Video: ')) {
-            const [width, height] = handleVideo(line);
+            const [width, height] = handleMetaVideo(line);
             meta.width = width;
             meta.height = height;
         }
@@ -133,7 +141,7 @@ const handleMeta = (dat, path) => {
     return true;
 };
 
-const handleDuration = (line) => {
+const handleMetaDuration = (line) => {
     const duration = line.trim().split(' ')[1].split(',')[0];
     const [hours, mins, secs] = duration.split(':');
     const length = parseInt(hours) * 3600 + parseInt(mins) * 60 + parseFloat(secs);
@@ -151,7 +159,7 @@ const formatDuration = (duration) => {
     return result;
 };
 
-const handleVideo = (line) => {
+const handleMetaVideo = (line) => {
     const match = /, ([\d]{2,4})x([\d]{2,4})/.exec(line);
     const width = parseInt(match[1]);
     const height = parseInt(match[2]);
@@ -181,7 +189,10 @@ const handleThumbnails = async (dat, absolutePath, relativePath) => {
     });
     clearInterval(iid);
     for (let i = 1; i <= lastFrame; i+=30) {
-        const imgPath = `${tmpDirPath}/${i.toString().padStart(5, '0')}.jpg`
+        const imgPath = `${tmpDirPath}/${i.toString().padStart(5, '0')}.jpg`;
+        if (!fs.existsSync(imgPath)) {
+            break;
+        }
         const base64 = fs.readFileSync(imgPath, {encoding: 'base64'});
         const thumbnail = `data:image/jpg;base64,${base64}`;
         thumbnails.push(thumbnail);
@@ -198,6 +209,14 @@ const md5hex = (str) => {
 
 const saveDat = (path, dat) => {
     fs.writeFileSync(path, JSON.stringify(dat));
+};
+
+const buildIndexPage = (db) => {
+    const srcPath = path.resolve('src/index.html');
+    const srcHtml = fs.readFileSync(srcPath).toString();
+    const distPath = path.resolve('dist/index.html');
+    const distHtml = srcHtml.replace('$DB', JSON.stringify(db));
+    fs.writeFileSync(distPath, distHtml);
 };
 
 const throwError = (message) => {
