@@ -3,7 +3,7 @@ const path = require('path');
 module.exports = {
     mode: 'production',
     entry: {
-        main: './src/js/main.js',
+        app: './src/js/app.js',
     },
     module: {
         rules: [

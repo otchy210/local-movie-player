@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
+import express from 'express';
 
 const exec = util.promisify(exec_);
 
@@ -19,6 +20,7 @@ const init = async () => {
     });
     resetLine();
     buildIndexPage(db);
+    initApp();
 };
 
 const buildContext = () => {
@@ -217,6 +219,21 @@ const buildIndexPage = (db) => {
     const distPath = path.resolve('dist/index.html');
     const distHtml = srcHtml.replace('$DB', JSON.stringify(db));
     fs.writeFileSync(distPath, distHtml);
+};
+
+const initApp = () => {
+    const app = express();
+    const url = `http://localhost${context.LMP_PORT === 80 ? '' : `:${context.LMP_PORT}`}`;
+    app.use('/js', express.static(path.resolve('dist/js')));
+    app.get('/', (req, res) => {
+        const indexPath = path.resolve('dist/index.html');
+        const indexHtml = fs.readFileSync(indexPath).toString();
+        res.set('Context-Type', 'text/html; charset=UTF-8');
+        res.send(indexHtml);
+    });
+    app.listen(context.LMP_PORT, () => {
+        showMessage(`Open ${url} on your browser\nCtrl+C to stop`);
+    });
 };
 
 const throwError = (message) => {

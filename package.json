@@ -4,16 +4,10 @@
   "description": "",
   "main": "dist/js/main.js",
   "scripts": {
-    "copy": "cp src/index.html dist/index.html",
-    "build": "npm run copy && webpack --mode production",
-    "watch": "npm run copy && webpack --mode production --watch",
-    "watch:bg": "npm run watch &",
+    "build": "webpack --mode production",
+    "watch": "webpack --mode production --watch",
     "ui": "webpack-dev-server --content-base dist --mode production --inline",
-    "ui:bg": "npm run ui &",
     "api": "node src/js/api.js",
-    "api:bg": "npm run api &",
-    "killall": "killall node",
-    "start": "npm run watch:bg && npm run ui:bg && npm run api:bg",
     "server": "node src/js/server.mjs"
   },
   "repository": {
