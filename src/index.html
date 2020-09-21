@@ -1,6 +1,9 @@
 <html>
   <head>
-    <script>globalThis.db = $DB;</script>
+    <script>
+      globalThis.context = $CONTEXT;
+      globalThis.db = $DB;
+    </script>
   </head>
   <body>
     <div id="app"></div>

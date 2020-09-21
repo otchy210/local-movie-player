@@ -248,7 +248,9 @@ const buildIndexPage = (db) => {
     const srcPath = path.resolve('src/index.html');
     const srcHtml = fs.readFileSync(srcPath).toString();
     const distPath = path.resolve('dist/index.html');
-    const distHtml = srcHtml.replace('$DB', JSON.stringify(db));
+    const distHtml = srcHtml
+        .replace('$CONTEXT', JSON.stringify(context))
+        .replace('$DB', JSON.stringify(db));
     fs.writeFileSync(distPath, distHtml);
 };
 
@@ -256,6 +258,7 @@ const initApp = () => {
     const app = express();
     const url = `http://localhost${context.LMP_PORT === 80 ? '' : `:${context.LMP_PORT}`}`;
     app.use('/js', express.static(path.resolve('dist/js')));
+    app.use('/movie', express.static(context.LMP_ROOT));
     app.get('/', (req, res) => {
         const indexPath = path.resolve('dist/index.html');
         const indexHtml = fs.readFileSync(indexPath).toString();

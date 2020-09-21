@@ -37,7 +37,8 @@ const MetaData = styled.span`
 const Card = (props) => {
     const { movie } = props;
     const { meta, stat } = movie;
-    const url = `http://localhost:${RESOURCE_PORT}/${movie.path}`;
+    const context = globalThis.context;
+    const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
     return <CardContainer>
         <ThumbnailContainer>
             <Thumbnail src={movie.thumbnails[0]} />

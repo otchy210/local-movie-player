@@ -26,7 +26,6 @@ const Search = (props) => {
                 return;
             }
             const filteredList = db.list(query);
-            console.log(filteredList);
             setList(filteredList);
         }, 500);
         return () => {
