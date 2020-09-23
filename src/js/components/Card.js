@@ -1,6 +1,5 @@
 import React from 'react';
 import styled from 'styled-components';
-import { RESOURCE_PORT } from '../const';
 import { Thumbnail } from './styled/Images';
 import { unit1 } from './styled/common';
 
