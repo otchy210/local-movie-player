@@ -6,6 +6,7 @@ import { unit1 } from './styled/common';
 const CardContainer = styled.div`
     position: relative;
     height: 100%;
+    cursor: pointer;
 `;
 
 const ThumbnailContainer = styled.div`
@@ -34,11 +35,9 @@ const MetaData = styled.span`
 `;
 
 const Card = (props) => {
-    const { movie } = props;
+    const { movie, selectMovie } = props;
     const { meta, stat } = movie;
-    const context = globalThis.context;
-    const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
-    return <CardContainer>
+    return <CardContainer onClick={()=>{selectMovie(movie)}}>
         <ThumbnailContainer>
             <Thumbnail src={movie.thumbnails[0]} />
         </ThumbnailContainer>
@@ -48,7 +47,7 @@ const Card = (props) => {
             <MetaData>{movie.ext}</MetaData>
             <MetaData>{stat.displaySize}</MetaData>
         </MetaDataContainer>
-        <a href={url} target="_blank">{movie.name}</a>
+        {movie.name}
     </CardContainer>
 };
 

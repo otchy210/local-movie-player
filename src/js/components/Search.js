@@ -9,7 +9,7 @@ const QueryContainer = styled.div`
 `;
 
 const Search = (props) => {
-    const { db } = props;
+    const { db, selectMovie } = props;
     const [list, setList] = useState(db.list());
     const queryInput = useRef();
 
@@ -37,7 +37,7 @@ const Search = (props) => {
         <QueryContainer>
             <TextInput ref={queryInput} />
         </QueryContainer>
-        <List list={list} />
+        <List list={list} selectMovie={selectMovie} />
     </div>
 };
 

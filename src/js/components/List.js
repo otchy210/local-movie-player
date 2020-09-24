@@ -21,9 +21,9 @@ const ListContainer = styled.div`
 `;
 
 const List = (props) => {
-    const { list } = props;
+    const { list, selectMovie } = props;
     return <ListContainer>
-        {list.map(movie => <Card movie={movie} />)}
+        {list.map(movie => <Card movie={movie} selectMovie={selectMovie} />)}
     </ListContainer>
 };
 
