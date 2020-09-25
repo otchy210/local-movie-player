@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import styled from 'styled-components';
 import { unit1 } from './styled/common';
 
@@ -17,10 +17,12 @@ const Panel = styled.div`
     position: fixed;
     display: flex;
     flex-direction: column;
-    width: 96vw;
-    height: 96vh;
-    left: 2vw;
-    top: 2vh;
+    width: 90vw;
+    max-width: 800px;
+    height: 90vh;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
     padding: ${unit1};
     background-color: #fff;
     border-radius: ${unit1};
@@ -43,21 +45,23 @@ const Thumbnails = styled.div`
 `;
 
 const Thumbnail = styled.img`
-    width: 16vw;
+    width: 12.5%;
+    cursor: pointer;
 `;
 
 const Player = (props) => {
     const { movie, unselectMovie } = props;
+    const ref = useRef();
     const context = globalThis.context;
     const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
     return <>
         <Bg onClick={unselectMovie}></Bg>
         <Panel>
             <Name>{movie.name}</Name>
-            <MovieWrapper><Movie src={url}></Movie></MovieWrapper>
+            <MovieWrapper><Movie src={url} ref={ref}></Movie></MovieWrapper>
             <Thumbnails>
-                {movie.thumbnails.map(data => {
-                    return <Thumbnail src={data}/>
+                {movie.thumbnails.map((data, i) => {
+                    return <Thumbnail src={data} onClick={()=>{ref.current.currentTime = i * 30}}/>
                 })}
             </Thumbnails>
         </Panel>
