@@ -1,6 +1,6 @@
-import React, { useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import styled from 'styled-components';
-import { unit1 } from './styled/common';
+import { unit1, unit3 } from './styled/common';
 
 const Bg = styled.div`
     position: fixed;
@@ -39,18 +39,36 @@ const MovieWrapper = styled.div`
 const Name = styled.div`
 `;
 
+const Controls = styled.div`
+    margin-top: ${unit1};
+`;
+
+const Button = styled.button`
+    width: ${unit3};
+    line-height: ${unit3};
+    text-align: center;
+    margin-right: 2px;
+    background-color: #333;
+    border: none;
+    border-radius: 2px;
+    color: #fff;
+    cursor: pointer;
+    outline: none;
+`;
+
 const Thumbnails = styled.div`
     margin-top: ${unit1};
     overflow: scroll;
 `;
 
 const Thumbnail = styled.img`
-    width: 12.5%;
+    width: ${props => props.size};
     cursor: pointer;
 `;
 
 const Player = (props) => {
     const { movie, unselectMovie } = props;
+    const [ size, setSize ] = useState('12.5%');
     const ref = useRef();
     const context = globalThis.context;
     const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
@@ -59,9 +77,14 @@ const Player = (props) => {
         <Panel>
             <Name>{movie.name}</Name>
             <MovieWrapper><Movie src={url} ref={ref}></Movie></MovieWrapper>
+            <Controls>
+                <Button onClick={() => {setSize('12.5%')}}>小</Button>
+                <Button onClick={() => {setSize('16.66%')}}>中</Button>
+                <Button onClick={() => {setSize('25%')}}>大</Button>
+            </Controls>
             <Thumbnails>
                 {movie.thumbnails.map((data, i) => {
-                    return <Thumbnail src={data} onClick={()=>{ref.current.currentTime = i * 30}}/>
+                    return <Thumbnail src={data} size={size} onClick={()=>{ref.current.currentTime = i * 30}}/>
                 })}
             </Thumbnails>
         </Panel>
