@@ -4,18 +4,21 @@ import Search from './Search';
 import Player from './Player';
 
 const App = () => {
-    const [db, setDb] = useState();
+    const [loading, setLoading] = useState(true);
     const [selectedMovie, selectMovie] = useState();
-    useEffect(() => {
-        const db = new DB(globalThis.db);
-        setDb(db);
+    useEffect(async () => {
+        const res = await fetch('./resources/db.json');
+        const json = await res.text();
+        globalThis.db = new DB(JSON.parse(json));
+        setLoading(false);
     }, []);
     const unselectMovie = () => {
         selectMovie(undefined);
     };
 
     return <>
-        {db && <Search db={db} selectMovie={selectMovie}></Search>}
+        {loading && 'Loading...'}
+        {!loading && <Search selectMovie={selectMovie}></Search>}
         {selectedMovie && <Player movie={selectedMovie} unselectMovie={unselectMovie}/>}
     </>
 };

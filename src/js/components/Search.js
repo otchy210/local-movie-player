@@ -9,7 +9,8 @@ const QueryContainer = styled.div`
 `;
 
 const Search = (props) => {
-    const { db, selectMovie } = props;
+    const { selectMovie } = props;
+    const { db } = globalThis;
     const [list, setList] = useState(db.list());
     const queryInput = useRef();
 

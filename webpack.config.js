@@ -18,6 +18,6 @@ module.exports = {
     },
     output: {
         filename: '[name].js',
-        path: path.resolve('./dist/js')
+        path: path.resolve('./dist/resources')
     },
 };

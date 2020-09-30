@@ -6,5 +6,6 @@ const darkGrey = '#666';
 export {
     unit1,
     unit2,
+    unit3,
     darkGrey,
 }

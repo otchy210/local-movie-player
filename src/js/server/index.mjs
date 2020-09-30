@@ -19,7 +19,8 @@ const init = async () => {
         console.warn(e);
     });
     resetLine();
-    buildIndexPage(db);
+    saveDb(db);
+    buildIndexPage();
     initApp();
 };
 
@@ -244,6 +245,13 @@ const saveDat = (path, dat) => {
     fs.writeFileSync(path, JSON.stringify(dat));
 };
 
+const saveDb = (db) => {
+    const resourcesDirPath = path.resolve('dist/resources');
+    fs.mkdirSync(resourcesDirPath, { recursive: true });
+    const dbPath = path.resolve('dist/resources/db.json');
+    fs.writeFileSync(dbPath, JSON.stringify(db));
+};
+
 const buildIndexPage = (db) => {
     const srcPath = path.resolve('src/index.html');
     const srcHtml = fs.readFileSync(srcPath).toString();
@@ -257,7 +265,7 @@ const buildIndexPage = (db) => {
 const initApp = () => {
     const app = express();
     const url = `http://localhost${context.LMP_PORT === 80 ? '' : `:${context.LMP_PORT}`}`;
-    app.use('/js', express.static(path.resolve('dist/js')));
+    app.use('/resources', express.static(path.resolve('dist/resources')));
     app.use('/movie', express.static(context.LMP_ROOT));
     app.get('/', (req, res) => {
         const indexPath = path.resolve('dist/index.html');
