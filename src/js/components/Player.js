@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { unit1, unit3 } from './styled/common';
 
@@ -62,16 +62,29 @@ const Thumbnails = styled.div`
 `;
 
 const Thumbnail = styled.img`
-    width: ${props => props.size};
+    width: calc(${props => props.size} - 4px);
     cursor: pointer;
+    border-style: solid;
+    border-width: 2px;
+    border-color: ${props => props.focused ? '#0f0' : 'rgba(0,0,0,0)'};
 `;
 
 const Player = (props) => {
     const { movie, unselectMovie } = props;
     const [ size, setSize ] = useState('12.5%');
+    const [ focusedIndex, setFocusedIndex ] = useState(0);
     const ref = useRef();
     const context = globalThis.context;
     const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
+    useEffect(() => {
+        const iid = setInterval(() => {
+            const currentIndex = parseInt(ref.current.currentTime / 30);
+            setFocusedIndex(currentIndex);
+        }, 200);
+        return () => {
+            clearInterval(iid);
+        }
+    }, []);
     return <>
         <Bg onClick={unselectMovie}></Bg>
         <Panel>
@@ -84,7 +97,7 @@ const Player = (props) => {
             </Controls>
             <Thumbnails>
                 {movie.thumbnails.map((data, i) => {
-                    return <Thumbnail src={data} size={size} onClick={()=>{ref.current.currentTime = i * 30}}/>
+                    return <Thumbnail src={data} size={size} onClick={()=>{ref.current.currentTime = i * 30}} focused={focusedIndex === i}/>
                 })}
             </Thumbnails>
         </Panel>

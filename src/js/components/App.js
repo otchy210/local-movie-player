@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import DB from '../server/db';
+import Loading from './Loading';
 import Search from './Search';
 import Player from './Player';
 
@@ -17,7 +18,7 @@ const App = () => {
     };
 
     return <>
-        {loading && 'Loading...'}
+        {loading && <Loading />}
         {!loading && <Search selectMovie={selectMovie}></Search>}
         {selectedMovie && <Player movie={selectedMovie} unselectMovie={unselectMovie}/>}
     </>
