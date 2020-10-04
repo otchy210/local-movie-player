@@ -52,16 +52,20 @@ const Name = styled.div`
 
 const Controls = styled.div`
     margin-top: ${unit1};
+    display: flex;
+    justify-content: space-between;
 `;
 
 const ButtonGroup = styled.div`
     display: inline-block;
     margin-right: ${unit1};
     & > button:first-child {
-        border-radius: ${unit1} 0 0 ${unit1};
+        border-top-left-radius: ${unit1};
+        border-bottom-left-radius: ${unit1};
     }
     & > button:last-child {
-        border-radius: 0 ${unit1} ${unit1} 0;
+        border-top-right-radius: ${unit1};
+        border-bottom-right-radius: ${unit1};
     }
 `;
 
@@ -110,17 +114,25 @@ const ThumbnailWrapper = styled.span`
     }
 `;
 
-const Time = styled.span`
-    display: none;
+const ThumbnailTag = styled.span`
     position: absolute;
-    left: 4px;
-    top: 2px;
     padding: 2px 4px;
     border-radius: 4px;
     border: 1px solid rgba(255,255,255,0.3);
     background-color: rgba(0,0,0,0.5);
     color: rgba(255,255,255,0.7);
     font-size: 0.7rem;
+`;
+
+const Time = styled(ThumbnailTag)`
+    display: none;
+    left: 4px;
+    top: 2px;
+`;
+
+const Star = styled(ThumbnailTag)`
+    right: 4px;
+    top: 2px;
 `;
 
 const Thumbnail = styled.img`
@@ -144,11 +156,13 @@ const formatTime = (time) => {
 
 const Player = (props) => {
     const { movie, unselectMovie } = props;
+    const { context, db } = globalThis;
     const [ size, setSize ] = useState(SIZE_S);
     const [ mode, setMode ] = useState(MODE_R);
     const [ focusedIndex, setFocusedIndex ] = useState(0);
+    const [ choosingThumbnail, setChoosingThumbnail ] = useState(false);
+    const [ selectedThumbnail, setSelectedThumbnail ] = useState(movie.selectedThumbnail || 0);
     const ref = useRef();
-    const context = globalThis.context;
     const url = `http://localhost:${context.LMP_PORT}/movie${movie.path}`;
     useEffect(() => {
         const iid = setInterval(() => {
@@ -159,6 +173,10 @@ const Player = (props) => {
             clearInterval(iid);
         }
     }, []);
+    const selectThumbnail = (index) => {
+        setSelectedThumbnail(index);
+        db.selectThumbnail(movie, index);
+    };
     return <>
         <Bg onClick={unselectMovie}></Bg>
         <Panel mode={mode}>
@@ -166,12 +184,17 @@ const Player = (props) => {
             <Name>{movie.name}</Name>
             <MovieWrapper><Movie src={url} ref={ref} mode={mode} /></MovieWrapper>
             <Controls>
-                <ButtonGroup>{
-                    SIZES.map(s => <Button onClick={() => {setSize(s)}} selected={size === s}>{s.label}</Button>)
-                }</ButtonGroup>
-                <ButtonGroup>{
-                    MODES.map(m => <Button onClick={() => {setMode(m)}} selected={mode === m}>{m.label}</Button>)
-                }</ButtonGroup>
+                <div>
+                    <ButtonGroup>{
+                        SIZES.map(s => <Button onClick={() => {setSize(s)}} selected={size === s}>{s.label}</Button>)
+                    }</ButtonGroup>
+                    <ButtonGroup>{
+                        MODES.map(m => <Button onClick={() => {setMode(m)}} selected={mode === m}>{m.label}</Button>)
+                    }</ButtonGroup>
+                </div>
+                <div>
+                    <ButtonGroup><Button onClick={() => {setChoosingThumbnail(!choosingThumbnail)}} selected={choosingThumbnail}>サムネイル選択</Button></ButtonGroup>
+                </div>
             </Controls>
             <Thumbnails mode={mode}>
                 {movie.thumbnails.map((data, i) => {
@@ -179,10 +202,17 @@ const Player = (props) => {
                         mode={mode}
                         size={size}
                         focused={focusedIndex === i}
-                        onClick={()=>{ref.current.currentTime = i * 30}}
+                        onClick= {()=>{
+                            if (choosingThumbnail) {
+                                selectThumbnail(i);
+                            } else {
+                                ref.current.currentTime = i * 30
+                            }
+                        }}
                         onDoubleClick={()=>{ref.current.play()}}
                     >
                         <Time>{formatTime(i*30)}</Time>
+                        {choosingThumbnail && (i === selectedThumbnail) && <Star>★</Star>}
                         <Thumbnail src={data} />
                     </ThumbnailWrapper>
                 })}

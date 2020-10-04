@@ -37,9 +37,10 @@ const MetaData = styled.span`
 const Card = (props) => {
     const { movie, selectMovie } = props;
     const { meta, stat } = movie;
+    const selectedThumbnail = movie.selectedThumbnail || 0;
     return <CardContainer onClick={()=>{selectMovie(movie)}}>
         <ThumbnailContainer>
-            <Thumbnail src={movie.thumbnails[0]} />
+            <Thumbnail src={movie.thumbnails[selectedThumbnail]} />
         </ThumbnailContainer>
         <MetaDataContainer>
             <MetaData>{meta.duration}</MetaData>

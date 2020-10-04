@@ -4,6 +4,7 @@ import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
 import express from 'express';
+import api from './api.mjs';
 
 const exec = util.promisify(exec_);
 
@@ -102,10 +103,6 @@ const handleMovie = async (relativePath) => {
     if (needToSave) {
         saveDat(datPath, dat);
     }
-    // const legacyDatPath = `${absolutePath}.dat`;
-    // if (fs.existsSync(legacyDatPath)) {
-    //     fs.unlinkSync(legacyDatPath);
-    // }
     const lastDotIndex = relativePath.lastIndexOf('.');
     const ext = relativePath.substring(lastDotIndex + 1);
     const lastSlashIndex = relativePath.lastIndexOf('/');
@@ -265,6 +262,7 @@ const buildIndexPage = (db) => {
 const initApp = () => {
     const app = express();
     const url = `http://localhost${context.LMP_PORT === 80 ? '' : `:${context.LMP_PORT}`}`;
+    app.use(express.json());
     app.use('/resources', express.static(path.resolve('dist/resources')));
     app.use('/movie', express.static(context.LMP_ROOT));
     app.get('/', (req, res) => {
@@ -273,6 +271,7 @@ const initApp = () => {
         res.set('Context-Type', 'text/html; charset=UTF-8');
         res.send(indexHtml);
     });
+    app.post('/api/:action', api(context));
     app.listen(context.LMP_PORT, () => {
         showMessage(`Open ${url} on your browser\nCtrl+C to stop`);
     });
