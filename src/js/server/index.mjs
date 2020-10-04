@@ -4,17 +4,15 @@ import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
 import express from 'express';
+import { initContext, context, getAbsolutePath, loadDat, saveDat, showMessage }from './common.mjs';
 import api from './api.mjs';
 
 const exec = util.promisify(exec_);
 
 const MOVIES_EXT = ['.mp4', '.m4v', 'mov'];
-let context;
 
 const init = async () => {
-    context = buildContext();
-    validateContext();
-    showMessage(context);
+    initContext();
     const db = [];
     await handleDir('/', db).catch(e => {
         console.warn(e);
@@ -25,36 +23,9 @@ const init = async () => {
     initApp();
 };
 
-const buildContext = () => {
-    const result = {
-        LMP_PORT: process.env.LMP_PORT ?? 8080,
-        LMP_TMP: process.env.LMP_TMP ?? '/tmp',
-    }
-    if (!process.env.LMP_ROOT) {
-        throwError("Not found LMP_ROOT environment variable");
-    }
-    result.LMP_ROOT = process.env.LMP_ROOT;
-    try {
-        result.LMP_FFMPEG = execSync('which ffmpeg').toString().trim();
-    } catch (e) {
-        throwError("Not found `ffmpeg` command");
-    }
-    return result;
-};
-
-const validateContext = () => {
-    if (!fs.existsSync(context.LMP_ROOT)) {
-        throwError(`"${context.LMP_ROOT}" doesn't exist`);
-    }
-    const stat = fs.statSync(context.LMP_ROOT);
-    if (!stat.isDirectory()) {
-        throwError(`"${context.LMP_ROOT}" isn't directory`);
-    }
-};
-
 const handleDir = async (relativePath, db) => {
     showOneline(relativePath);
-    const absoluteDirPath = `${context.LMP_ROOT}${relativePath}`;
+    const absoluteDirPath = getAbsolutePath(relativePath);
     const files = fs.readdirSync(absoluteDirPath);
     for (const file of files) {
         const relativeFilePath = `${relativePath}${file}`;
@@ -81,7 +52,7 @@ const hasMovieExt = (file) => {
 };
 
 const isDir = (relativePath) => {
-    const absolutePath = `${context.LMP_ROOT}${relativePath}`;
+    const absolutePath = getAbsolutePath(relativePath);
     if (!fs.existsSync(absolutePath)) {
         return false;
     }
@@ -91,9 +62,8 @@ const isDir = (relativePath) => {
 
 const handleMovie = async (relativePath) => {
     showOneline(relativePath);
-    const absolutePath = `${context.LMP_ROOT}${relativePath}`;
-    const datPath = `${absolutePath}.json`;
-    const dat = loadDat(datPath);
+    const absolutePath = getAbsolutePath(relativePath);
+    const dat = loadDat(relativePath);
     let needToSave = false;
     needToSave |= handleStat(dat, absolutePath);
     needToSave |= handleMeta(dat, absolutePath);
@@ -101,7 +71,7 @@ const handleMovie = async (relativePath) => {
         console.warn(e);
     });
     if (needToSave) {
-        saveDat(datPath, dat);
+        saveDat(relativePath, dat);
     }
     const lastDotIndex = relativePath.lastIndexOf('.');
     const ext = relativePath.substring(lastDotIndex + 1);
@@ -114,17 +84,6 @@ const handleMovie = async (relativePath) => {
         name,
     };
 }
-
-const loadDat = (path) => {
-    if(!fs.existsSync(path)) {
-        return {};
-    }
-    const stat = fs.statSync(path);
-    if (!stat.isFile()) {
-        return {};
-    }
-    return JSON.parse(fs.readFileSync(path));
-};
 
 const handleStat = (dat, path) => {
     const stat = dat.stat ?? {};
@@ -238,10 +197,6 @@ const md5hex = (str) => {
     return md5.update(str, 'binary').digest('hex');
 };
 
-const saveDat = (path, dat) => {
-    fs.writeFileSync(path, JSON.stringify(dat));
-};
-
 const saveDb = (db) => {
     const resourcesDirPath = path.resolve('dist/resources');
     fs.mkdirSync(resourcesDirPath, { recursive: true });
@@ -271,24 +226,10 @@ const initApp = () => {
         res.set('Context-Type', 'text/html; charset=UTF-8');
         res.send(indexHtml);
     });
-    app.post('/api/:action', api(context));
+    app.post('/api/:action', api);
     app.listen(context.LMP_PORT, () => {
         showMessage(`Open ${url} on your browser\nCtrl+C to stop`);
     });
-};
-
-const throwError = (message) => {
-    throw `
-#### ERROR ################################################################
-${message}
-###########################################################################
-`;
-}
-
-const showMessage = (message) => {
-    console.log('==== Local Movie Player ===================================================');
-    console.log(message);
-    console.log('===========================================================================');
 };
 
 const resetLine = () => {

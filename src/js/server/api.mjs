@@ -1,8 +1,10 @@
-let context;
+import { loadDat, saveDat, } from './common.mjs';
 
 const selectThumbnail = (params) => {
     const {path, index} = params;
-    console.log(path, index, context);
+    const dat = loadDat(path);
+    dat.selectedThumbnail = index;
+    saveDat(path, dat);
 };
 
 const api = (req, res) => {
@@ -16,7 +18,4 @@ const api = (req, res) => {
     res.send();
 };
 
-export default (_context) => {
-    context = _context;
-    return api;
-};
+export default api;
