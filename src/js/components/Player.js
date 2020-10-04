@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
+import { ls } from './common';
 import { unit1, unit3 } from './styled/common';
 
 const SIZE_S = {label: '小', width: '12.5%'};
@@ -26,9 +27,9 @@ const Panel = styled.div`
     position: fixed;
     display: flex;
     flex-direction: column;
-    width: ${props => props.mode === MODE_X ? '96vw' : '90vw'};
-    max-width: ${props => props.mode === MODE_X ? 'none' : '800px'};
-    height: ${props => props.mode === MODE_X ? '96vh' : '90vh'};
+    width: ${props => props.mode.label === MODE_X.label ? '96vw' : '90vw'};
+    max-width: ${props => props.mode.label === MODE_X.label ? 'none' : '800px'};
+    height: ${props => props.mode.label === MODE_X.label ? '96vh' : '90vh'};
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
@@ -40,7 +41,7 @@ const Panel = styled.div`
 
 const Movie = styled.video.attrs({controls: 'controls'})`
     width: 100%;
-    max-height: ${props => props.mode === MODE_X ? 'calc(96vh - 150px)' : 'none'};
+    max-height: ${props => props.mode.label === MODE_X.label ? 'calc(96vh - 150px)' : 'none'};
     background-color: #000;
 `;
 
@@ -98,13 +99,13 @@ const Close = styled.button`
 const Thumbnails = styled.div`
     margin-top: ${unit1};
     overflow: scroll;
-    white-space: ${props => props.mode === MODE_X ? 'nowrap' : 'none'};
+    white-space: ${props => props.mode.label === MODE_X.label ? 'nowrap' : 'none'};
 `;
 
 const ThumbnailWrapper = styled.span`
     display: inline-block;
     position: relative;
-    width: ${props => props.mode === MODE_X ? '120px' : `calc(${props.size.width} - 4px)`};
+    width: ${props => props.mode.label === MODE_X.label ? '120px' : `calc(${props.size.width} - 4px)`};
     border-style: solid;
     border-width: 2px;
     border-color: ${props => props.focused ? '#3c3' : 'rgba(0,0,0,0)'};
@@ -157,8 +158,8 @@ const formatTime = (time) => {
 const Player = (props) => {
     const { movie, unselectMovie } = props;
     const { context, db } = globalThis;
-    const [ size, setSize ] = useState(SIZE_S);
-    const [ mode, setMode ] = useState(MODE_R);
+    const [ size, setSizeState ] = useState(ls.get('size', SIZE_S));
+    const [ mode, setModeState ] = useState(ls.get('mode', MODE_R));
     const [ focusedIndex, setFocusedIndex ] = useState(0);
     const [ choosingThumbnail, setChoosingThumbnail ] = useState(false);
     const [ selectedThumbnail, setSelectedThumbnail ] = useState(movie.selectedThumbnail || 0);
@@ -173,6 +174,14 @@ const Player = (props) => {
             clearInterval(iid);
         }
     }, []);
+    const setSize = (size) => {
+        ls.set('size', size);
+        setSizeState(size);
+    }
+    const setMode = (mode) => {
+        ls.set('mode', mode);
+        setModeState(mode);
+    }
     const selectThumbnail = (index) => {
         setSelectedThumbnail(index);
         db.selectThumbnail(movie, index);
@@ -186,10 +195,10 @@ const Player = (props) => {
             <Controls>
                 <div>
                     <ButtonGroup>{
-                        SIZES.map(s => <Button onClick={() => {setSize(s)}} selected={size === s}>{s.label}</Button>)
+                        SIZES.map(s => <Button onClick={() => {setSize(s)}} selected={size.label === s.label}>{s.label}</Button>)
                     }</ButtonGroup>
                     <ButtonGroup>{
-                        MODES.map(m => <Button onClick={() => {setMode(m)}} selected={mode === m}>{m.label}</Button>)
+                        MODES.map(m => <Button onClick={() => {setMode(m)}} selected={mode.label === m.label}>{m.label}</Button>)
                     }</ButtonGroup>
                 </div>
                 <div>
