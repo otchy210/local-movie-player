@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import styled from 'styled-components';
+import styled, { createGlobalStyle } from 'styled-components';
 import { ls } from './common';
 import { unit1, unit3 } from './styled/common';
 
@@ -11,6 +11,12 @@ const SIZES = [SIZE_S, SIZE_M, SIZE_L];
 const MODE_R = {label: '標準'};
 const MODE_X = {label: '拡大'};
 const MODES = [MODE_R, MODE_X];
+
+const NoScroll = createGlobalStyle`
+    html, body {
+        overflow: hidden;
+    }
+`;
 
 const Bg = styled.div`
     position: fixed;
@@ -187,6 +193,7 @@ const Player = (props) => {
         db.selectThumbnail(movie, index);
     };
     return <>
+        <NoScroll/>
         <Bg onClick={unselectMovie}></Bg>
         <Panel mode={mode}>
             <Close onClick={unselectMovie}>閉</Close>
