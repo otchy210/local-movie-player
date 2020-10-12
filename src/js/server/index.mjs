@@ -4,7 +4,7 @@ import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
 import express from 'express';
-import { initContext, context, getAbsolutePath, loadDat, saveDat, showMessage }from './common.mjs';
+import { initContext, context, getAbsolutePath, loadDat, saveDat, showMessage, getArgs }from './common.mjs';
 import api from './api.mjs';
 
 const exec = util.promisify(exec_);
@@ -158,7 +158,8 @@ const handleMetaVideo = (line) => {
 
 const handleThumbnails = async (dat, absolutePath, relativePath) => {
     const thumbnails = dat.thumbnails ?? [];
-    if (thumbnails.length > 0) {
+    const args = getArgs();
+    if (args['forceThumbnailsUpdate'] !== 'true' && thumbnails.length > 0) {
         return false;
     }
     const tmpDirPath = `${context.LMP_TMP}/${md5hex(absolutePath)}`;
@@ -173,7 +174,7 @@ const handleThumbnails = async (dat, absolutePath, relativePath) => {
             showOneline(`${relativePath} [${files.length.toString().padStart(lastFrameLength, ' ')}/${lastFrame}]`);
         });
     }, 200);
-    const command = `${context.LMP_FFMPEG} -skip_frame nokey -i "${absolutePath}" -vf scale=240:-1,fps=1 -q:v 10 "${tmpDirPath}/%05d.jpg"`
+    const command = `${context.LMP_FFMPEG} -skip_frame nokey -i "${absolutePath}" -vf scale=480:-1,fps=1 -q:v 10 "${tmpDirPath}/%05d.jpg"`
     await exec(command).catch(e => {
         console.warn(e);
     });

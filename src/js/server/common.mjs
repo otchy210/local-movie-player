@@ -75,11 +75,37 @@ const showMessage = (message) => {
     console.log('===========================================================================');
 };
 
+const parseArgv = () => {
+    if (process.argv.length <= 2) {
+        return {};
+    }
+    const result = {};
+    process.argv.forEach((arg, i) => {
+        if (i < 2) {
+            return true;
+        }
+        if (arg.startsWith('--')) {
+            const [name, value] = arg.substr(2).split('=');
+            result[name] = value;
+        }
+    });
+    return result;
+};
+
+let args;
+const getArgs = () => {
+    if (!args) {
+        args = parseArgv();
+    }
+    return args;
+}
+
 export {
     initContext,
     context,
     getAbsolutePath,
     loadDat,
     saveDat,
-    showMessage
+    showMessage,
+    getArgs
 }
