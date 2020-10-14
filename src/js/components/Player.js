@@ -45,14 +45,50 @@ const Panel = styled.div`
     z-index: 99;
 `;
 
+const MovieWrapper = styled.div`
+    position: relative;
+    &:hover > div {
+        opacity: 1;
+    }
+`;
+
 const Movie = styled.video.attrs({controls: 'controls'})`
     width: 100%;
     max-height: ${props => props.mode.label === MODE_X.label ? 'calc(96vh - 150px)' : 'none'};
     background-color: #000;
 `;
 
-const MovieWrapper = styled.div`
-`
+const MovieOverlay = styled.div`
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100px;
+    height: calc(100% - 65px);
+    top: 0;
+    opacity: 0;
+    text-align: center;
+    color: #fff;
+    cursor: pointer;
+`;
+
+const Rewind = styled(MovieOverlay)`
+    left: 0;
+`;
+
+const FastForward = styled(MovieOverlay)`
+    right: 0;
+`;
+
+const MovieOverlayControl = styled.div`
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 80px;
+    background-color: rgba(0,0,0,0.5);
+    user-select: none;
+`;
 
 const Name = styled.div`
 `;
@@ -192,13 +228,20 @@ const Player = (props) => {
         setSelectedThumbnail(index);
         db.selectThumbnail(movie, index);
     };
+    const moveCurrentTime = (amount) => {
+        ref.current.currentTime += amount;
+    };
     return <>
         <NoScroll/>
         <Bg onClick={unselectMovie}></Bg>
         <Panel mode={mode}>
             <Close onClick={unselectMovie}>閉</Close>
             <Name>{movie.name}</Name>
-            <MovieWrapper><Movie src={url} ref={ref} mode={mode} /></MovieWrapper>
+            <MovieWrapper>
+                <Movie src={url} ref={ref} mode={mode} />
+                <Rewind onClick={()=> moveCurrentTime(-10)}><MovieOverlayControl>≪ 10s</MovieOverlayControl></Rewind>
+                <FastForward onClick={()=> moveCurrentTime(30)}><MovieOverlayControl>30s ≫</MovieOverlayControl></FastForward>
+            </MovieWrapper>
             <Controls>
                 <div>
                     <ButtonGroup>{
@@ -222,7 +265,7 @@ const Player = (props) => {
                             if (choosingThumbnail) {
                                 selectThumbnail(i);
                             } else {
-                                ref.current.currentTime = i * 30
+                                ref.current.currentTime = i * 30;
                             }
                         }}
                         onDoubleClick={()=>{ref.current.play()}}

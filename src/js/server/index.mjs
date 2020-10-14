@@ -162,6 +162,7 @@ const handleThumbnails = async (dat, absolutePath, relativePath) => {
     if (args['forceThumbnailsUpdate'] !== 'true' && thumbnails.length > 0) {
         return false;
     }
+    thumbnails.length = 0;
     const tmpDirPath = `${context.LMP_TMP}/${md5hex(absolutePath)}`;
     if (fs.existsSync(tmpDirPath)) {
         fs.rmdirSync(tmpDirPath, { recursive: true });
