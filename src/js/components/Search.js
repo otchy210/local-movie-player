@@ -4,12 +4,21 @@ import List from './List';
 import { TextInput } from './styled/Forms';
 import { unit1 } from './styled/common';
 
+const queryContainerHeight = '34px';
+
 const QueryContainer = styled.div`
-    position: ${props => props.fixed ? 'fixed' : 'relative'};
-    left: ${props => props.fixed ? '0' : 'auto'};
-    top: ${props => props.fixed ? '0' : 'auto'};
-    width: ${props => props.fixed ? '100%' : 'auto'};
-    margin-bottom: ${unit1};
+    position: fixed;
+    width: calc(100% - ${unit1} * 2);
+    height: ${queryContainerHeight};
+    left: 0;
+    top: 0;
+    padding: ${unit1};
+    background-color: #fff;
+    z-index: 99;
+`;
+
+const ListContainer = styled.div`
+    margin-top:  ${queryContainerHeight};
 `;
 
 const Search = (props) => {
@@ -44,7 +53,9 @@ const Search = (props) => {
         <QueryContainer fixed={fixed}>
             <TextInput ref={queryInput} />
         </QueryContainer>
-        <List list={list} selectMovie={selectMovie} />
+        <ListContainer>
+            <List list={list} selectMovie={selectMovie} />
+        </ListContainer>
     </div>
 };
 
