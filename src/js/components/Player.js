@@ -24,7 +24,7 @@ const Bg = styled.div`
     height: 100vh;
     left: 0;
     top: 0;
-    z-index: 9;
+    z-index: 99;
     background-color: rgba(0,0,0,0.5);
     backdrop-filter: blur(${unit1});
 `;
@@ -43,7 +43,7 @@ const Panel = styled.div`
     background-color: #fff;
     border-radius: ${unit1};
     box-shadow: 0 0 4px rgba(0,0,0,0.6);
-    z-index: 99;
+    z-index: 999;
 `;
 
 const MovieWrapper = styled.div`

@@ -14,7 +14,7 @@ const QueryContainer = styled.div`
     top: 0;
     padding: ${unit1};
     background-color: #fff;
-    z-index: 99;
+    z-index: 9;
 `;
 
 const ListContainer = styled.div`
