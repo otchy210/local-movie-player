@@ -44,13 +44,21 @@ const getDatPath = (relativePath) => {
     return `${absolutePath}.json`;
 };
 
-const loadDat = (relativePath) => {
+const hasDat = (relativePath) => {
     const path = getDatPath(relativePath);
     if(!fs.existsSync(path)) {
-        return {};
+        return false;
     }
     const stat = fs.statSync(path);
     if (!stat.isFile()) {
+        return false;
+    }
+    return path;
+};
+
+const loadDat = (relativePath) => {
+    const path = hasDat(relativePath);
+    if (!path) {
         return {};
     }
     return JSON.parse(fs.readFileSync(path));
@@ -104,6 +112,7 @@ export {
     initContext,
     context,
     getAbsolutePath,
+    hasDat,
     loadDat,
     saveDat,
     showMessage,

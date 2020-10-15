@@ -4,7 +4,7 @@ import path from 'path';
 import crypt from 'crypto';
 import util from 'util';
 import express from 'express';
-import { initContext, context, getAbsolutePath, loadDat, saveDat, showMessage, getArgs }from './common.mjs';
+import { initContext, context, getAbsolutePath, hasDat, loadDat, saveDat, showMessage, getArgs }from './common.mjs';
 import api from './api.mjs';
 
 const exec = util.promisify(exec_);
@@ -27,9 +27,14 @@ const handleDir = async (relativePath, db) => {
     showOneline(relativePath);
     const absoluteDirPath = getAbsolutePath(relativePath);
     const files = fs.readdirSync(absoluteDirPath);
+    const args = getArgs();
+    const skipNoDataMovie = args['skipNoDataMovie'] === 'true';
     for (const file of files) {
         const relativeFilePath = `${relativePath}${file}`;
         if (hasMovieExt(file)) {
+            if (skipNoDataMovie && !hasDat(relativeFilePath)) {
+                continue;
+            }
             const movie = await handleMovie(relativeFilePath).catch(e => {
                 console.warn(e);
             });
