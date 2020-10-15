@@ -42,6 +42,7 @@ const Panel = styled.div`
     padding: ${unit1};
     background-color: #fff;
     border-radius: ${unit1};
+    box-shadow: 0 0 4px rgba(0,0,0,0.6);
     z-index: 99;
 `;
 
