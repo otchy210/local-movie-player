@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-import { Thumbnail } from './styled/Images';
 import { unit1 } from './styled/common';
 
 const CardContainer = styled.div`
@@ -15,6 +14,10 @@ const ThumbnailContainer = styled.div`
     display: flex;
     align-items: center;
     background-color: #000;
+`;
+
+const Thumbnail = styled.img`
+    width: 100%;
 `;
 
 const MetaDataContainer = styled.div`
@@ -37,10 +40,24 @@ const MetaData = styled.span`
 const Card = (props) => {
     const { movie, selectMovie } = props;
     const { meta, stat } = movie;
-    const selectedThumbnail = movie.selectedThumbnail || 0;
+    const defaultThumbnail = movie.selectedThumbnail || 0;
+    const [ thumbnail, setThumbnail ] = useState(defaultThumbnail);
+    const handleMouseMove = (e) => {
+        const target = e.target;
+        const rect = target.getBoundingClientRect();
+        const w = rect.width;
+        const x = Math.min(Math.max(e.clientX - rect.x, 0), w);
+        const len = movie.thumbnails.length;
+        const index = Math.floor((len / w) * x);
+        setThumbnail(index);
+    };
     return <CardContainer onClick={()=>{selectMovie(movie)}}>
         <ThumbnailContainer>
-            <Thumbnail src={movie.thumbnails[selectedThumbnail]} />
+            <Thumbnail
+                src={movie.thumbnails[thumbnail]}
+                onMouseMove={handleMouseMove}
+                onMouseOut={() => setThumbnail(defaultThumbnail)}
+            />
         </ThumbnailContainer>
         <MetaDataContainer>
             <MetaData>{meta.duration}</MetaData>
