@@ -6,11 +6,13 @@ import { unit1, unit3 } from './styled/common';
 const SIZE_S = {label: '小', width: '12.5%'};
 const SIZE_M = {label: '中', width: '16.666%'};
 const SIZE_L = {label: '大', width: '25%'};
-const SIZES = [SIZE_S, SIZE_M, SIZE_L];
+const SIZE_XL = {label: '特大', width: '33.333%'};
+const SIZES = [SIZE_S, SIZE_M, SIZE_L, SIZE_XL];
 
 const MODE_R = {label: '標準'};
-const MODE_X = {label: '拡大'};
-const MODES = [MODE_R, MODE_X];
+const MODE_L = {label: '拡大'};
+const MODE_X = {label: '最大'};
+const MODES = [MODE_R, MODE_L, MODE_X];
 
 const NoScroll = createGlobalStyle`
     html, body {
@@ -33,9 +35,34 @@ const Panel = styled.div`
     position: fixed;
     display: flex;
     flex-direction: column;
-    width: ${props => props.mode.label === MODE_X.label ? '96vw' : '90vw'};
-    max-width: ${props => props.mode.label === MODE_X.label ? 'none' : '800px'};
-    height: ${props => props.mode.label === MODE_X.label ? '96vh' : '90vh'};
+    width: ${props => {
+        switch (props.mode.label) {
+            case MODE_R.label:
+                return '90vw';
+            case MODE_L.label:
+            case MODE_X.label:
+                return '96vw';
+        }
+    }};
+    max-width: ${props => {
+        switch (props.mode.label) {
+            case MODE_R.label:
+                return '800px';
+            case MODE_L.label:
+                return '1200px';
+            case MODE_X.label:
+                return 'none'
+        }
+    }};
+    height: ${props => {
+        switch (props.mode.label) {
+            case MODE_R.label:
+                return '90vh';
+            case MODE_L.label:
+            case MODE_X.label:
+                return '96vh';
+        }
+    }};
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
