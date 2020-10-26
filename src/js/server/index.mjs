@@ -24,7 +24,7 @@ const init = async () => {
 };
 
 const handleDir = async (relativePath, db) => {
-    showOneline(relativePath);
+    showOneline(relativePath, 6);
     const absoluteDirPath = getAbsolutePath(relativePath);
     const files = fs.readdirSync(absoluteDirPath);
     const args = getArgs();
@@ -66,7 +66,7 @@ const isDir = (relativePath) => {
 };
 
 const handleMovie = async (relativePath) => {
-    showOneline(relativePath);
+    showOneline(relativePath, 10);
     const absolutePath = getAbsolutePath(relativePath);
     const dat = loadDat(relativePath);
     let needToSave = false;
@@ -175,9 +175,10 @@ const handleThumbnails = async (dat, absolutePath, relativePath) => {
     fs.mkdirSync(tmpDirPath);
     const lastFrame = parseInt(dat.meta.length);
     const lastFrameLength = lastFrame.toString().length;
+    const keepLastWidth = 10 + 2 + lastFrameLength + 1 + lastFrameLength + 1;
     const iid = setInterval(() => {
         fs.readdir(tmpDirPath, (err, files) => {
-            showOneline(`${relativePath} [${files.length.toString().padStart(lastFrameLength, ' ')}/${lastFrame}]`);
+            showOneline(`${relativePath} [${files.length.toString().padStart(lastFrameLength, ' ')}/${lastFrame}]`, keepLastWidth);
         });
     }, 200);
     const command = `${context.LMP_FFMPEG} -skip_frame nokey -i "${absolutePath}" -vf scale=480:-1,fps=1 -q:v 10 "${tmpDirPath}/%05d.jpg"`
@@ -244,9 +245,55 @@ const resetLine = () => {
     process.stdout.cursorTo(0);
 }
 
-const showOneline = (message) => {
+const terminalWidth = (()=> {
+    return parseInt(process.stdout.columns);
+})();
+
+const getCharWidth = (char) => {
+    const c = char.charCodeAt(0);
+    if((c >= 0x00 && c < 0x81) || (c === 0xf8f0) || (c >= 0xff61 && c < 0xffa0) || (c >= 0xf8f1 && c < 0xf8f4)) {
+        return 1;
+    } else {
+        return 2;
+    }
+};
+
+const getStrWidth = (str) => {
+    return [...str].reduce((prev, char) => {
+        return prev + getCharWidth(char);
+    }, 0);
+};
+
+const showOneline = (message, keepLastWidth = -1) => {
     resetLine();
-    process.stdout.write(message);
+    if (keepLastWidth === -1) {
+        process.stdout.write(message);
+        return;
+    }
+    const width = getStrWidth(message);
+    if (width <= terminalWidth) {
+        process.stdout.write(message);
+        return;
+    }
+    const maxLeftWidth = terminalWidth - keepLastWidth - 4;
+    let leftWidth = 0;
+    let result = '';
+    for (let i = 0; i < message.length && leftWidth < maxLeftWidth; i++) {
+        const char = message.charAt(i);
+        result += char;
+        leftWidth += getCharWidth(char);
+    }
+    let rightWidth = 0;
+    let rightStr = '';
+    for (let i = message.length - 1; i >= 0 && rightWidth < keepLastWidth; i--) {
+        const char = message.charAt(i);
+        rightStr = char + rightStr;
+        rightWidth += getCharWidth(char);
+    }
+    const dotsWidth = terminalWidth - leftWidth - rightWidth;
+    result += '.'.repeat(dotsWidth);
+    result += rightStr;
+    process.stdout.write(result);
 };
 
 export {
