@@ -240,8 +240,51 @@ const Player = (props) => {
             const currentIndex = parseInt(ref.current.currentTime / 30);
             setFocusedIndex(currentIndex);
         }, 200);
+        const handleOnKeyDown = (e) => {
+            switch (e.code) {
+                case 'Escape':
+                    unselectMovie();
+                    break;
+                case 'Space':
+                    if (ref.current.paused) {
+                        ref.current.play();
+                    } else {
+                        ref.current.pause();
+                    }
+                    break;
+                case 'ArrowLeft':
+                    moveCurrentTime(-10);
+                    break;
+                case 'ArrowRight':
+                    moveCurrentTime(30);
+                    break;
+                case 'Digit1':
+                    setSize(SIZE_S);
+                    break;
+                case 'Digit2':
+                    setSize(SIZE_M);
+                    break;
+                case 'Digit3':
+                    setSize(SIZE_L);
+                    break;
+                case 'Digit4':
+                    setSize(SIZE_XL);
+                    break;
+                case 'Digit8':
+                    setMode(MODE_R);
+                    break;
+                case 'Digit9':
+                    setMode(MODE_L);
+                    break;
+                case 'Digit0':
+                    setMode(MODE_X);
+                    break;
+                }
+        };
+        document.addEventListener('keydown', handleOnKeyDown);
         return () => {
             clearInterval(iid);
+            document.removeEventListener('keydown', handleOnKeyDown);
         }
     }, []);
     const setSize = (size) => {
