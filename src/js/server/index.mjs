@@ -265,6 +265,9 @@ const getStrWidth = (str) => {
 };
 
 const showOneline = (message, keepLastWidth = -1) => {
+    if (getArgs()['silenceMessages'] === 'true') {
+        return;
+    }
     resetLine();
     if (keepLastWidth === -1) {
         process.stdout.write(message);

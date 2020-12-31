@@ -5,7 +5,15 @@ let context;
 const initContext = () => {
     context = buildContext();
     validateContext();
-    showMessage(context);
+    const message = `
+context:
+${Object.entries(context).map(([name, value]) => `  ${name}: ${value}`).join('\n')}
+avaiable options:
+  --forceThumbnailsUpdate=true
+  --skipNoDataMovie=true
+  --silenceMessages=true
+`.trim();
+    showMessage(message);
 };
 
 const buildContext = () => {
@@ -78,6 +86,9 @@ ${message}
 };
 
 const showMessage = (message) => {
+    if (getArgs()['silenceMessages'] === 'true') {
+        return;
+    }
     console.log('==== Local Movie Player ===================================================');
     console.log(message);
     console.log('===========================================================================');
